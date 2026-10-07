@@ -1,0 +1,30 @@
+services:
+    db:
+      image: postgis/postgis:16-3.4
+      environment:
+        POSTGRES_DB: parcely
+        POSTGRES_USER: admin
+        POSTGRES_PASSWORD: admin
+      ports: ["5433:5432"]
+      volumes: [dbdata:/var/lib/postgresql/data]
+
+    gdal:
+      image: ghcr.io/osgeo/gdal:ubuntu-small-latest
+      volumes: [./data:/data]
+      depends_on: [db]
+      profiles: [tools]
+
+    php:
+      build: ./docker/php
+      command: php -S 0.0.0.0:8080 -t public public/index.php
+      volumes: [.:/app]
+      ports: ["8080:8080"]
+      environment:
+        DB_DSN: "pgsql:host=db;port=5432;dbname=parcely"
+        DB_USER: admin
+        DB_PASS: admin
+        PHP_CLI_SERVER_WORKERS: 8
+      depends_on: [db]
+
+volumes:
+  dbdata:
