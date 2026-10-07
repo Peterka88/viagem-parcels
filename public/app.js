@@ -1,4 +1,3 @@
-// Druhy pozemku z katastru (kód -> název a barva na mapě)
 const DRUHY_POZEMKU = {
     2:  { nazev: 'Orná půda',               barva: '#e9d97a' },
     3:  { nazev: 'Chmelnice',               barva: '#b5c95a' },
@@ -12,12 +11,11 @@ const DRUHY_POZEMKU = {
     14: { nazev: 'Ostatní plocha',          barva: '#c9c9c9' },
 };
 
-// Od tohto zoomu server posiela parcely (musí sedieť s PARCELY_MINZOOM v TileController.php)
 const PARCELY_MINZOOM = 13;
 
 const map = new maplibregl.Map({
     container: 'map',
-    center: [15.352, 50.437], // Jičín
+    center: [15.352, 50.437],
     zoom: 14,
     style: {
         version: 8,
@@ -33,8 +31,6 @@ const map = new maplibregl.Map({
                 type: 'vector',
                 tiles: [window.location.origin + '/tiles/{z}/{x}/{y}.pbf'],
                 minzoom: PARCELY_MINZOOM,
-                // Nad zoom 16 MapLibre už nepýta nové dlaždice, len zväčší tie zo zoomu 16.
-                // Presnosť stačí a server generuje oveľa menej dlaždíc.
                 maxzoom: 16,
                 attribution: '© <a href="https://www.cuzk.cz">ČÚZK</a>',
             },
@@ -45,9 +41,9 @@ const map = new maplibregl.Map({
                 id: 'parcely-plocha',
                 type: 'fill',
                 source: 'parcely',
-                'source-layer': 'parcely', // názov vrstvy z ST_AsMVT(..., 'parcely', ...)
+                'source-layer': 'parcely',
                 paint: {
-                    'fill-color': farbaPodlaDruhu(),
+                    'fill-color': colorLand(),
                     'fill-opacity': [
                         'case',
                         ['boolean', ['feature-state', 'vybrana'], false], 0.8,
@@ -70,7 +66,7 @@ const map = new maplibregl.Map({
                 type: 'line',
                 source: 'parcely',
                 'source-layer': 'parcely',
-                filter: ['==', ['id'], -1], // na začiatku nič nie je vybrané
+                filter: ['==', ['id'], -1],
                 paint: { 'line-color': '#d7191c', 'line-width': 3 },
             },
         ],
@@ -80,8 +76,7 @@ const map = new maplibregl.Map({
 map.addControl(new maplibregl.NavigationControl());
 map.addControl(new maplibregl.ScaleControl());
 
-// Výraz pre MapLibre: farba podľa druh_pozemku_kod, neznámy kód = sivá
-function farbaPodlaDruhu() {
+function colorLand () {
     const vyraz = ['match', ['get', 'druh_pozemku_kod']];
     for (const [kod, druh] of Object.entries(DRUHY_POZEMKU)) {
         vyraz.push(Number(kod), druh.barva);
@@ -94,26 +89,63 @@ function farbaPodlaDruhu() {
 let pickedParcelId = null;
 
 map.on('click', 'parcely-plocha', (e) => {
-    const parcel = e.features[0];
-    pickParcel(parcel.id);
-
-    const propertyType = DRUHY_POZEMKU[parcel.properties.druh_pozemku_kod];
-    document.getElementById('detail').innerHTML = `
-        <h2>Parcela</h2>
-        <p><b>ID:</b> ${parcel.id}</p>
-        <p><b>Druh pozemku:</b> ${propertyType ? propertyType.nazev : 'neznámý'}</p>
-    `;
+    pickParcel(e.features[0].id);
 });
 
-function pickParcel(id) {
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+}
+
+function renderBpej(p) {
+    if (!p.bpej || p.bpej.length === 0) return '—';
+    return p.bpej
+        .map((b) => `${escapeHtml(b.kod)}${b.vymera != null ? ` (${escapeHtml(b.vymera)} m²)` : ''}`)
+        .join('<br>');
+}
+
+async function pickParcel(id) {
     const source = { source: 'parcely', sourceLayer: 'parcely' };
 
+    map.setFilter('parcely-vybrana', ['==', ['id'], id]);
     if (pickedParcelId !== null) {
         map.setFeatureState({ ...source, id: pickedParcelId }, { vybrana: false });
     }
     pickedParcelId = id;
     map.setFeatureState({ ...source, id }, { vybrana: true });
-    map.setFilter('parcely-vybrana', ['==', ['id'], id]);
+
+    const detail = document.getElementById('detail');
+    detail.innerHTML = '<p>Načítavam...</p>';
+
+    try {
+        const res = await fetch('/api/parcel/' + encodeURIComponent(id));
+        const p = await res.json();
+        if (!res.ok) throw new Error(p.error ?? res.statusText);
+
+        const druh = DRUHY_POZEMKU[p.druh_pozemku_kod];
+
+        detail.innerHTML = `
+          <h2>${escapeHtml(p.cislo)}</h2>
+          <p class="sub">k.ú. ${escapeHtml(p.katastralni_uzemi.nazev)}</p>
+          <table>
+            <tr><th>Výměra</th><td>${escapeHtml(p.vymera)} m²</td></tr>
+            <tr><th>Obec</th><td>${escapeHtml(p.obec)}</td></tr>
+            <tr><th>Katastrální území</th><td>${escapeHtml(p.katastralni_uzemi.nazev)} [${escapeHtml(p.katastralni_uzemi.kod)}]</td></tr>
+            <tr><th>Druh pozemku</th><td>${escapeHtml(druh ? druh.nazev : p.druh_pozemku_kod)}</td></tr>
+            <tr><th>Způsob využití</th><td>${escapeHtml(p.zpusob_vyuziti_kod ?? '—')}</td></tr>
+            <tr><th>BPEJ</th><td>${renderBpej(p)}</td></tr>
+          </table>
+          <a class="btn" target="_blank" rel="noopener" href="${escapeHtml(p.nahlizeni_url)}">
+            Otevřít v Nahlížení do KN ↗
+          </a>
+          <p class="muted" style="font-size:12px;margin-top:12px">
+            Vlastník a číslo LV nejsou součástí otevřených dat — jsou dostupné v Nahlížení do KN.
+          </p>
+        `;
+    } catch (err) {
+        detail.innerHTML = `<p>Nepodarilo sa načítať parcelu: ${escapeHtml(err.message)}</p>`;
+    }
 }
 
 map.on('mouseenter', 'parcely-plocha', () => { map.getCanvas().style.cursor = 'pointer'; });

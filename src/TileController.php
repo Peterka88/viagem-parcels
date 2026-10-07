@@ -18,7 +18,7 @@ final class TileController {
                 FROM parcely p, tile
                 WHERE p.geom && tile.bounds
              )
-            SELECT ST_AsMVT(features, 'parcely', 4096, 'geom') FROM features
+            SELECT ST_AsMVT(features, 'parcely', 4096, 'geom', 'id') FROM features
             SQL;
 
         $query = $this->db->prepare($sql);

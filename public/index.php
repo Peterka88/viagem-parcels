@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/TileController.php';
+require __DIR__ . '/../src/ParcelController.php';
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
@@ -20,6 +21,9 @@ try {
 
     if (preg_match('#^/tiles/(\d+)/(\d+)/(\d+)\.pbf$#', $path, $m)) {
         (new TileController($db))->getTile((int) $m[1], (int) $m[2], (int) $m[3]);
+        exit;
+    } elseif (preg_match('#^/api/parcel/(\d+)$#', $path, $m)) {
+        (new ParcelController($db))->getParcelDetails((int) $m[1]);
         exit;
     }
 }catch (Throwable $e) {
