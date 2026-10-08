@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/TileController.php';
 require __DIR__ . '/../src/ParcelController.php';
+require __DIR__ . '/../src/GeojsonController.php';
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
@@ -25,6 +26,12 @@ try {
     } elseif (preg_match('#^/api/parcel/(\d+)$#', $path, $m)) {
         (new ParcelController($db))->getParcelDetails((int) $m[1]);
         exit;
+    } elseif ($path === '/api/parcely.geojson') {
+        (new GeoJsonController($db))->getAll();
+        exit;
+    } else {
+        http_response_code(404);
+        echo 'Not found';
     }
 }catch (Throwable $e) {
     http_response_code(500);

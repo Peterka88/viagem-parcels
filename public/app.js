@@ -28,9 +28,8 @@ const map = new maplibregl.Map({
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             },
             parcely: {
-                type: 'vector',
-                tiles: [window.location.origin + '/tiles/{z}/{x}/{y}.pbf'],
-                minzoom: PARCELY_MINZOOM,
+                type: 'geojson',
+                data: '/api/parcely.geojson',
                 maxzoom: 20,
                 attribution: '© <a href="https://www.cuzk.cz">ČÚZK</a>',
             },
@@ -41,7 +40,6 @@ const map = new maplibregl.Map({
                 id: 'parcely-plocha',
                 type: 'fill',
                 source: 'parcely',
-                'source-layer': 'parcely',
                 paint: {
                     'fill-color': colorLand(),
                     'fill-opacity': [
@@ -55,7 +53,6 @@ const map = new maplibregl.Map({
                 id: 'parcely-hranice',
                 type: 'line',
                 source: 'parcely',
-                'source-layer': 'parcely',
                 paint: {
                     'line-color': '#5a4a3a',
                     'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.2, 18, 1.2],
@@ -65,13 +62,15 @@ const map = new maplibregl.Map({
                 id: 'parcely-vybrana',
                 type: 'line',
                 source: 'parcely',
-                'source-layer': 'parcely',
                 filter: ['==', ['id'], -1],
                 paint: { 'line-color': '#d7191c', 'line-width': 3 },
             },
         ],
     },
 });
+
+const t0 = performance.now();
+map.once('idle', () => console.log('Vykreslené za', Math.round(performance.now() - t0), 'ms'));
 
 map.addControl(new maplibregl.NavigationControl());
 map.addControl(new maplibregl.ScaleControl());
@@ -106,7 +105,7 @@ function renderBpej(p) {
 }
 
 async function pickParcel(id) {
-    const source = { source: 'parcely', sourceLayer: 'parcely' };
+    const source = { source: 'parcely' };
 
     map.setFilter('parcely-vybrana', ['==', ['id'], id]);
     if (pickedParcelId !== null) {
