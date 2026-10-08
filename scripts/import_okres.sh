@@ -35,4 +35,4 @@ for KOD in $KODY; do
   MODE="-addfields"
 done
 
-echo "Done -> 01_dn.sql"
+echo "Done -> 01_db.sql"
