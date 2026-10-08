@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/../src/Database.php';
 require __DIR__ . '/../src/TileController.php';
 require __DIR__ . '/../src/ParcelController.php';
+require __DIR__ . '/../src/KuController.php';
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
@@ -16,6 +17,28 @@ try {
 
     if ($path === '/') {
         readfile(__DIR__ . '/index.html');
+        exit;
+    }
+
+    if ($path === '/api/ku') {
+        (new KuController($db))->getAllKu();
+        exit;
+    }
+
+    if ($path === '/api/parcel/search') {
+        $kmen = filter_input(INPUT_GET, 'kmen', FILTER_VALIDATE_INT);
+        $ku = filter_input(INPUT_GET, 'ku', FILTER_VALIDATE_INT);
+        $druh = filter_input(INPUT_GET, 'druh', FILTER_VALIDATE_INT);
+        $pod = filter_input(INPUT_GET, 'pod', FILTER_VALIDATE_INT);
+
+        if (!$kmen || !$ku || !in_array($druh, [1, 2], true)) {
+            http_response_code(400);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => 'Neplatné parametry']);
+            exit;
+        }
+
+        (new ParcelController($db))->searchParcels($kmen, $ku, $druh, $pod ?: null);
         exit;
     }
 

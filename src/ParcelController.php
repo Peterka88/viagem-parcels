@@ -51,6 +51,47 @@ final class ParcelController {
         ]);
     }
 
+
+    public function searchParcels(int $kmenoveCislo, int $kuKod, int $druhCislovani, ?int $pod = null): void {
+        $sql = <<<SQL
+            SELECT id,
+                   ST_XMin(b) AS minx, ST_YMin(b) AS miny,
+                   ST_XMax(b) AS maxx, ST_YMax(b) AS maxy
+            FROM (
+                SELECT id, ST_Extent(ST_Transform(geom, 4326)) AS b
+                FROM parcely
+                WHERE kmenove_cislo = :kmen
+                  AND pododdeleni_cisla IS NOT DISTINCT FROM CAST(:pod AS integer)
+                  AND ku_kod = :ku
+                  AND druh_cislovani_kod = :druh
+                GROUP BY id
+            ) t
+            LIMIT 1
+            SQL;
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'kmen' => $kmenoveCislo,
+            'pod' => $pod,
+            'ku' => $kuKod,
+            'druh' => $druhCislovani,
+        ]);
+        $row = $stmt->fetch();
+
+        if ($row === false) {
+            $this->json(['error' => 'Parcela nenalezena'], 404);
+            return;
+        }
+
+        $this->json([
+            'id' => (int) $row['id'],
+            'minx' => (float) $row['minx'],
+            'miny' => (float) $row['miny'],
+            'maxx' => (float) $row['maxx'],
+            'maxy' => (float) $row['maxy'],
+        ]);
+    }
+
     private function json(array $data, int $status = 200): void
     {
         http_response_code($status);

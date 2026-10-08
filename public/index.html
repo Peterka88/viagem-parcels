@@ -27,6 +27,10 @@
         .panel p { margin: 4px 0; }
         .hint { color: #666; }
 
+        .search { top: 12px; left: auto; right: 56px; width: 240px; }
+        .search form { display: flex; flex-direction: column; gap: 8px; }
+        .search input, .search select, .search button { font: inherit; padding: 6px 8px; }
+
         .legend { bottom: 30px; top: auto; width: auto; }
         .legend div { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
         .legend span { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
@@ -37,6 +41,21 @@
 
 <div class="panel" id="detail">
     <p class="hint">Přibližte mapu a klikněte na parcelu.</p>
+</div>
+
+<div class="panel search">
+    <h2>Hledat parcelu</h2>
+    <form id="search-form">
+        <input type="text" id="search-cislo" placeholder="Číslo parcely (např. 123/4)" autocomplete="off">
+        <select id="search-druh-cislovani">
+            <option value="1">Stavební</option>
+            <option value="2" selected>Pozemková</option>
+        </select>
+        <select id="search-ku">
+            <option value="">Načítám k.ú...</option>
+        </select>
+        <button type="submit">Hledat</button>
+    </form>
 </div>
 
 <div class="panel legend" id="legend"></div>
