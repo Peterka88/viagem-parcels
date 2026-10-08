@@ -31,7 +31,7 @@ const map = new maplibregl.Map({
                 type: 'vector',
                 tiles: [window.location.origin + '/tiles/{z}/{x}/{y}.pbf'],
                 minzoom: PARCELY_MINZOOM,
-                maxzoom: 16,
+                maxzoom: 20,
                 attribution: '© <a href="https://www.cuzk.cz">ČÚZK</a>',
             },
         },

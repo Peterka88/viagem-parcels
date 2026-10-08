@@ -10,7 +10,7 @@ services:
 
     gdal:
       image: ghcr.io/osgeo/gdal:ubuntu-small-latest
-      volumes: [./data:/data]
+      volumes: [./data:/data, ./scripts:/scripts]
       depends_on: [db]
       profiles: [tools]
 
