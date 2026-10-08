@@ -11,7 +11,7 @@ const DRUHY_POZEMKU = {
     14: { name: 'Ostatní plocha',          color: '#c9c9c9' },
 };
 
-const PARCELY_MINZOOM = 13;
+const PARCELY_MINZOOM = 9;
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -67,6 +67,23 @@ const map = new maplibregl.Map({
                 'source-layer': 'parcely',
                 filter: ['==', ['id'], -1],
                 paint: { 'line-color': '#d7191c', 'line-width': 3 },
+            },
+            {
+                id: 'ku-plocha',
+                type: 'fill',
+                source: 'parcely',
+                'source-layer': 'katastralni',
+                paint: {
+                    'fill-color': '#6c8ebf',
+                    'fill-opacity': 0.25,
+                },
+            },
+            {
+                id: 'ku-hranice',
+                type: 'line',
+                source: 'parcely',
+                'source-layer': 'katastralni',
+                paint: { 'line-color': '#3d5a8a', 'line-width': 1 },
             },
         ],
     },
