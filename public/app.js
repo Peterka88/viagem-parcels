@@ -11,8 +11,6 @@ const DRUHY_POZEMKU = {
     14: { name: 'Ostatní plocha',          color: '#c9c9c9' },
 };
 
-const PARCELY_MINZOOM = 9;
-
 const map = new maplibregl.Map({
     container: 'map',
     center: [15.352, 50.437],
@@ -29,7 +27,7 @@ const map = new maplibregl.Map({
             parcely: {
                 type: 'vector',
                 tiles: [window.location.origin + '/tiles/{z}/{x}/{y}.pbf'],
-                minzoom: PARCELY_MINZOOM,
+                minzoom: 9,
                 maxzoom: 20,
                 attribution: '© <a href="https://www.cuzk.cz">ČÚZK</a>',
             },
