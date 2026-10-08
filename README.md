@@ -130,7 +130,7 @@ vektorové dlaždice. Na samotnú aplikačnú logiku v PHP potom už toľko
 - **Rovnaké čísla parciel.** V každom KÚ existuje parcela `100` aj `st. 100`
   a sú to dva rôzne pozemky
 - **Spôsob využitia pozemku je vyplnený len pri časti parciel**
-- - **Koľko spôsobov ponúka na získanie dát existuje.** WMS (obrázky),
+- **Koľko spôsobov ponúka na získanie dát existuje.** WMS (obrázky),
     WFS a INSPIRE (vektory cez službu) aj RÚIAN (súbory na stiahnutie)
 
 ### Čo by som s viac časom riešil inak
@@ -138,4 +138,4 @@ vektorové dlaždice. Na samotnú aplikačnú logiku v PHP potom už toľko
 - **Aktualizovanie dát** job ktorý by raz za mesiac skontroloval či sa nevydala nová verzia katastra a naimportoval by ju
 - **Cache dlaždíc** na disku alebo cez nginx, aby sa každá generovala len raz
 - **Názvy  ČÚZK** (spôsob využitia, ochrana pozemku, BPEJ) namiesto kódov
-- **Testy**, napr. pre formátovanie čísla parcely a validáciu vstupov
+- **Testy** 
